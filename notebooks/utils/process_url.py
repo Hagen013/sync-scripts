@@ -55,6 +55,12 @@ def serialize_offer(el):
         if tag == 'param':
             column = ' '.join(list(node.attrib.values())[::-1])
             value = node.text
+        elif tag == 'picture':
+            column = tag
+            value = node.text
+            if tag in instance.keys():
+                old_value = instance[column]
+                value = '{0}#{1}'.format(old_value, value)
         else:
             column = tag
             value = node.text
