@@ -44,7 +44,11 @@ def decode_content(raw_content):
         return raw_content.decode('cp1251').encode('utf8').decode('utf8')
     except UnicodeDecodeError:
         # UTF-8
-        return raw_content.decode('utf8')
+        try:
+            return raw_content.decode('utf8')
+        except UnicodeDecodeError:
+            return raw_content.decode('latin-1').encode('utf-8')
+
 
 
 def serialize_offer(el):
@@ -83,6 +87,6 @@ def get_xlsx(url, output_dir='../data'):
         offers.append(offer)
     df = pd.DataFrame(offers)
     sitename = get_tld(url.url)
-    writer = pd.ExcelWriter('{0}/{1}.xlsx'.format(output_dir, sitename))
+    writer = pd.ExcelWriter('{0}/{1}.xlsx'.format(output_dir, sitename), options={'strings_to_urls': False})
     df.to_excel(writer, 'Sheet')
     writer.save()
