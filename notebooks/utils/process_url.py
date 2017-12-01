@@ -8,28 +8,38 @@ from requests.auth import HTTPBasicAuth
 
 
 class URL:
-    
-    def __init__(self, url=None, login=None, password=None):
+
+    def __init__(self, url=None, login=None, password=None, offer_selector='offer', picture_selector='picture'):
         self._url = url
         self._login = login
         self._password = password
-        
+        self._offer_selector = offer_selector
+        self._picture_selector = picture_selector
+
     @property
     def url(self):
         return self._url
-    
+
+    @property
+    def offer_selector(self):
+        return self._offer_selector
+
+    @property
+    def picture_selector(self):
+        return self._picture_selector
+
     @property
     def login(self):
         return self._login
-    
+
     @property
     def password(self):
         return self._password
-    
+
     @property
     def auth_required(self):
         return not ((self._login is None) or (self.password is None))
-    
+
     @property
     def auth(self):
         if self.auth_required:
@@ -50,8 +60,7 @@ def decode_content(raw_content):
             return raw_content.decode('latin-1').encode('utf-8')
 
 
-
-def serialize_offer(el):
+def serialize_offer(el, picture_selector):
     instance = OrderedDict()
     instance.update(el.attrib)
     for node in el.getchildren():
@@ -59,7 +68,7 @@ def serialize_offer(el):
         if tag == 'param':
             column = ' '.join(list(node.attrib.values())[::-1])
             value = node.text
-        elif tag == 'picture':
+        elif tag == picture_selector:
             column = tag
             value = node.text
             if tag in instance.keys():
@@ -79,11 +88,15 @@ def get_content(url, auth=None):
 
 
 def get_xlsx(url, output_dir='../data'):
+
+    offer_selector = './/{0}'.format(url.offer_selector)
+    picture_selector = url.picture_selector
+
     content = get_content(url.url, url.auth)
     root = ET.fromstring(content)
     offers = []
-    for el in root.findall('.//offer'):
-        offer = serialize_offer(el)
+    for el in root.findall(offer_selector):
+        offer = serialize_offer(el, picture_selector)
         offers.append(offer)
     df = pd.DataFrame(offers)
     sitename = get_tld(url.url)
